@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pulse — Social</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet"/>
+  <style>
+    /*  DESIGN TOKENS */
+    :root {
+      --bg:         #0d0f14;--surface:    #161921;--surface2:   #1e222d;--border:     #252a38;--accent:     #6366f1;--accent-glow:#6366f140;--accent2:    #a78bfa;
+      --text:       #e8eaf0;--muted:      #7b8190;--danger:     #f87171;--success:    #34d399; --radius:     14px; --radius-sm:  8px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 15px; line-height: 1.6;
+    }
+
+    /* Utility */
+    .hidden { display: none !important; }
+    .flex { display: flex; }
+    .items-center { align-items: center; }
+    .gap-2 { gap: 8px; }
+    .gap-3 { gap: 12px; }
+    .mt-2 { margin-top: 8px; }
+    .mt-3 { margin-top: 12px; }
+    .muted { color: var(--muted); font-size: 13px; }
+    .accent { color: var(--accent); }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    /*Buttons */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 9px 20px; border-radius: var(--radius-sm);
+      font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 500;
+      cursor: pointer; border: none; transition: all 0.18s;
+    }
+    .btn-primary {
+      background: var(--accent); color: #fff;
+    }
+    .btn-primary:hover { background: #4f52d8; box-shadow: 0 0 20px var(--accent-glow); }
+    .btn-ghost {
+      background: transparent; color: var(--muted); border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { background: var(--surface2); color: var(--text); }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-sm { padding: 6px 14px; font-size: 13px; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /*Form inputs*/
+    .input {
+      width: 100%; padding: 11px 14px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); color: var(--text);
+      font-family: 'Inter', sans-serif; font-size: 14px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+    .input::placeholder { color: var(--muted); }
+
+    textarea.input { resize: vertical; min-height: 90px; }
+
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group label { font-size: 13px; color: var(--muted); font-weight: 500; }
+    .error-msg { color: var(--danger); font-size: 13px; margin-top: 4px; }
+
+    /*  AUTH SCREEN */
+    #auth-screen {
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px;
+      background: radial-gradient(ellipse 80% 60% at 50% -10%, #6366f118 0%, transparent 70%);
+    }
+
+    .auth-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 40px; width: 100%; max-width: 420px;
+      box-shadow: 0 24px 80px #00000060;
+    }
+
+    .auth-logo {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 28px; font-weight: 700;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 6px;
+    }
+
+    .auth-subtitle { color: var(--muted); font-size: 14px; margin-bottom: 28px; }
+
+    .auth-tabs {
+      display: flex; gap: 4px; margin-bottom: 24px;
+      background: var(--surface2); border-radius: var(--radius-sm); padding: 4px;
+    }
+    .auth-tab {
+      flex: 1; padding: 8px; text-align: center; font-size: 14px; font-weight: 500;
+      cursor: pointer; border-radius: 6px; color: var(--muted); transition: all 0.2s;
+    }
+    .auth-tab.active { background: var(--accent); color: #fff; }
+
+    .auth-form { display: flex; flex-direction: column; gap: 16px; }
+
+    /* MAIN APP LAYOUT */
+    #app-screen { display: none; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 240px 1fr 300px;
+      grid-template-rows: 60px 1fr;
+      min-height: 100vh;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /*Top Nav  */
+    .topnav {
+      grid-column: 1 / -1;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px;
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 100;
+    }
+
+    .nav-logo {
+      font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 20px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .nav-search .input { width: 260px; padding: 8px 14px; }
+
+    .nav-user { display: flex; align-items: center; gap: 12px; }
+    .nav-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 14px; cursor: pointer;
+      border: 2px solid var(--border);
+    }
+
+    /*Sidebar  */
+    .sidebar {
+      padding: 24px 16px;
+      border-right: 1px solid var(--border);
+      position: sticky; top: 60px; height: calc(100vh - 60px);
+      overflow-y: auto;
+    }
+
+    .sidebar-nav { display: flex; flex-direction: column; gap: 4px; }
+    .nav-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 11px 14px; border-radius: var(--radius-sm);
+      color: var(--muted); cursor: pointer; font-weight: 500;
+      transition: all 0.15s;
+    }
+    .nav-item:hover { background: var(--surface2); color: var(--text); }
+    .nav-item.active { background: var(--accent-glow); color: var(--accent); }
+
+    .nav-icon { font-size: 20px; width: 24px; text-align: center; }
+
+    /* Main Feed*/
+    .main-feed {
+      padding: 24px;
+      overflow-y: auto; height: calc(100vh - 60px);
+    }
+
+    /* Right Panel */
+    .right-panel {
+      padding: 24px 16px;
+      border-left: 1px solid var(--border);
+      overflow-y: auto; height: calc(100vh - 60px);
+    }
+
+    .panel-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 16px; font-weight: 700; margin-bottom: 16px; color: var(--text);
+    }
+
+    /* CARDS */
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 20px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .card:hover { border-color: #353a4a; }
+
+    /*Compose Post*/
+    .compose-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 20px; margin-bottom: 20px;
+    }
+    .compose-top { display: flex; gap: 12px; }
+    .compose-avatar {
+      width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 16px;
+    }
+    .compose-textarea {
+      flex: 1; background: transparent; border: none; color: var(--text);
+      font-size: 16px; font-family: 'Inter', sans-serif; resize: none;
+      outline: none; min-height: 60px; line-height: 1.5;
+    }
+    .compose-textarea::placeholder { color: var(--muted); }
+    .compose-footer {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border);
+    }
+    .compose-counter { font-size: 12px; color: var(--muted); }
+    .compose-counter.warn { color: var(--danger); }
+
+    /*Post Card*/
+    .post-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 20px; margin-bottom: 16px;
+      transition: border-color 0.2s;
+    }
+    .post-card:hover { border-color: #353a4a; }
+
+    .post-header { display: flex; align-items: flex-start; justify-content: space-between; }
+    .post-author { display: flex; gap: 12px; cursor: pointer; }
+    .post-avatar {
+      width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 15px;
+      box-shadow: 0 0 0 2px var(--bg), 0 0 0 3px var(--border);
+      transition: box-shadow 0.2s;
+    }
+    .post-avatar:hover { box-shadow: 0 0 0 2px var(--bg), 0 0 0 3px var(--accent); }
+
+    .post-author-name { font-weight: 600; font-size: 14px; }
+    .post-author-handle { color: var(--muted); font-size: 13px; }
+
+    .post-content { margin: 14px 0; font-size: 15px; line-height: 1.65; }
+    .post-image { width: 100%; border-radius: var(--radius-sm); margin-top: 12px; }
+
+    .post-actions { display: flex; gap: 4px; margin-top: 14px; }
+    .action-btn {
+      display: flex; align-items: center; gap: 6px;
+      padding: 7px 12px; border-radius: var(--radius-sm);
+      background: transparent; border: none; cursor: pointer;
+      color: var(--muted); font-size: 13px; font-weight: 500;
+      transition: all 0.15s;
+    }
+    .action-btn:hover { background: var(--surface2); color: var(--text); }
+    .action-btn.liked { color: #f43f5e; }
+    .action-btn.liked:hover { background: #f43f5e18; }
+
+    /* Comments  */
+    .comments-section {
+      margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border);
+    }
+    .comment-item {
+      display: flex; gap: 10px; margin-bottom: 12px;
+    }
+    .comment-avatar {
+      width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+      background: linear-gradient(135deg, #8b5cf6, #ec4899);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 11px;
+    }
+    .comment-bubble {
+      background: var(--surface2); border-radius: 0 var(--radius-sm) var(--radius-sm) var(--radius-sm);
+      padding: 10px 14px; flex: 1;
+    }
+    .comment-author-name { font-weight: 600; font-size: 13px; }
+    .comment-text { font-size: 14px; color: var(--text); margin-top: 2px; }
+    .comment-time { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+    .comment-input-row { display: flex; gap: 10px; margin-top: 12px; align-items: flex-end; }
+    .comment-input-row .input { font-size: 14px; min-height: unset; padding: 9px 12px; }
+
+    /*Profile Page  */
+    .profile-header {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 32px; margin-bottom: 20px;
+    }
+    .profile-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
+    .profile-avatar-wrap {
+      width: 90px; height: 90px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 36px; font-weight: 700;
+      box-shadow: 0 0 0 4px var(--bg), 0 0 0 6px var(--accent);
+    }
+    .profile-name { font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 700; }
+    .profile-handle { color: var(--muted); font-size: 14px; }
+    .profile-bio { margin: 12px 0; color: var(--text); font-size: 14px; }
+    .profile-stats { display: flex; gap: 28px; margin-top: 16px; }
+    .profile-stat { text-align: center; }
+    .profile-stat-num { font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700; }
+    .profile-stat-label { font-size: 12px; color: var(--muted); }
+
+    /*User Discovery Card  */
+    .user-card {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 0; border-bottom: 1px solid var(--border);
+    }
+    .user-card:last-child { border-bottom: none; }
+    .user-card-left { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+    .user-card-avatar {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 13px; flex-shrink: 0;
+    }
+    .user-card-name { font-weight: 600; font-size: 14px; }
+    .user-card-handle { font-size: 12px; color: var(--muted); }
+
+    /*Toast*/
+    #toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      background: var(--surface2); color: var(--text);
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+      padding: 12px 20px; font-size: 14px; font-weight: 500;
+      box-shadow: 0 8px 32px #00000060;
+      transition: opacity 0.3s; z-index: 9999; pointer-events: none;
+    }
+    #toast.show { opacity: 1; }
+    #toast:not(.show) { opacity: 0; }
+
+    /* Loading spinner */
+    .spinner {
+      display: inline-block; width: 20px; height: 20px;
+      border: 2px solid var(--border); border-top-color: var(--accent);
+      border-radius: 50%; animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Responsive*/
+    @media (max-width: 960px) {
+      .layout { grid-template-columns: 60px 1fr; }
+      .right-panel { display: none; }
+      .nav-item span { display: none; }
+      .nav-item { justify-content: center; }
+    }
+    @media (max-width: 600px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+      .main-feed { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- AUTH SCREEN  (Login / Register) -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo">⚡ Pulse</div>
+    <p class="auth-subtitle">Connect, share, and follow people you care about.</p>
+
+    <div class="auth-tabs">
+      <div class="auth-tab active" onclick="switchTab('login')">Log in</div>
+      <div class="auth-tab" onclick="switchTab('register')">Sign up</div>
+    </div>
+
+    <!-- Login Form -->
+    <div id="login-form" class="auth-form">
+      <div class="form-group">
+        <label>Username</label>
+        <input class="input" type="text" id="login-username" placeholder="your_username" autocomplete="username"/>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input class="input" type="password" id="login-password" placeholder="••••••••" autocomplete="current-password"/>
+      </div>
+      <div id="login-error" class="error-msg hidden"></div>
+      <button class="btn btn-primary" onclick="handleLogin()">Log in</button>
+    </div>
+
+    <!-- Register Form -->
+    <div id="register-form" class="auth-form hidden">
+      <div class="form-group">
+        <label>Username</label>
+        <input class="input" type="text" id="reg-username" placeholder="choose_a_handle"/>
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input class="input" type="email" id="reg-email" placeholder="you@example.com"/>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input class="input" type="password" id="reg-password" placeholder="at least 6 characters"/>
+      </div>
+      <div id="register-error" class="error-msg hidden"></div>
+      <button class="btn btn-primary" onclick="handleRegister()">Create account</button>
+    </div>
+  </div>
+</div>
+
+<!--  MAIN APP -->
+<div id="app-screen">
+  <div class="layout">
+
+    <!-- Top Nav -->
+    <nav class="topnav">
+      <div class="nav-logo">⚡ Pulse</div>
+      <div class="nav-search">
+        <input class="input" type="search" id="search-input" placeholder="Search users…" oninput="searchUsers(this.value)"/>
+      </div>
+      <div class="nav-user">
+        <div class="nav-avatar" id="nav-avatar" onclick="showPage('profile-me')">?</div>
+        <button class="btn btn-ghost btn-sm" onclick="logout()">Log out</button>
+      </div>
+    </nav>
+
+    <!-- Left Sidebar -->
+    <aside class="sidebar">
+      <nav class="sidebar-nav">
+        <div class="nav-item active" id="nav-home" onclick="showPage('feed')">
+          <span class="nav-icon">🏠</span><span>Home</span>
+        </div>
+        <div class="nav-item" id="nav-explore" onclick="showPage('explore')">
+          <span class="nav-icon">🔍</span><span>Explore</span>
+        </div>
+        <div class="nav-item" id="nav-profile" onclick="showPage('profile-me')">
+          <span class="nav-icon">👤</span><span>Profile</span>
+        </div>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-feed" id="main-content">
+
+      <!--Feed Page  -->
+      <div id="page-feed">
+        <!-- Compose -->
+        <div class="compose-card">
+          <div class="compose-top">
+            <div class="compose-avatar" id="compose-avatar">?</div>
+            <textarea class="compose-textarea" id="compose-text"
+              placeholder="What's on your mind?"
+              oninput="updateCounter()"
+              maxlength="500"></textarea>
+          </div>
+          <div class="compose-footer">
+            <span class="compose-counter" id="compose-counter">0 / 500</span>
+            <button class="btn btn-primary btn-sm" onclick="createPost()">Post</button>
+          </div>
+        </div>
+        <!-- Posts -->
+        <div id="feed-posts">
+          <div style="text-align:center;padding:40px;color:var(--muted)">
+            <div class="spinner"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Explore Page-->
+      <div id="page-explore" class="hidden">
+        <div id="explore-posts"></div>
+      </div>
+
+      <!--Profile Page-->
+      <div id="page-profile" class="hidden">
+        <div class="profile-header" id="profile-header">
+          <div class="profile-top">
+            <div style="display:flex;gap:20px;align-items:flex-start">
+              <div class="profile-avatar-wrap" id="prof-avatar">?</div>
+              <div>
+                <div class="profile-name" id="prof-name">—</div>
+                <div class="profile-handle muted" id="prof-handle">@—</div>
+                <div class="profile-bio" id="prof-bio"></div>
+                <div class="profile-stats">
+                  <div class="profile-stat">
+                    <div class="profile-stat-num" id="prof-posts-count">0</div>
+                    <div class="profile-stat-label">Posts</div>
+                  </div>
+                  <div class="profile-stat">
+                    <div class="profile-stat-num" id="prof-followers">0</div>
+                    <div class="profile-stat-label">Followers</div>
+                  </div>
+                  <div class="profile-stat">
+                    <div class="profile-stat-num" id="prof-following">0</div>
+                    <div class="profile-stat-label">Following</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div id="prof-actions"></div>
+          </div>
+        </div>
+        <div id="profile-posts"></div>
+      </div>
+
+      <!--Search Results -->
+      <div id="page-search" class="hidden">
+        <h3 style="margin-bottom:16px;font-family:'Space Grotesk',sans-serif">Search Results</h3>
+        <div id="search-results"></div>
+      </div>
+
+    </main>
+
+    <!-- Right Panel: People to Follow -->
+    <aside class="right-panel">
+      <div class="panel-title">People to follow</div>
+      <div id="suggestions-list">
+        <div class="spinner" style="margin:20px auto;display:block;width:20px;height:20px"></div>
+      </div>
+    </aside>
+
+  </div>
+</div>
+
+<!-- Toast notification -->
+<div id="toast"></div>
+
+<script>
+//  CONFIGURATION
+const API = 'http://127.0.0.1:8000/api';   // Change to your server URL
+//  STATE//
+let currentUser = null;
+let accessToken = localStorage.getItem('access_token');
+let refreshToken = localStorage.getItem('refresh_token');
+let currentProfileId = null;
+let searchTimeout = null;
+
+
+async function apiFetch(endpoint, options = {}) {
+  const headers = { 'Content-Type': 'application/json', ...options.headers };
+  if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`;
+
+  let res = await fetch(`${API}${endpoint}`, { ...options, headers });
+
+  
+  if (res.status === 401 && refreshToken) {
+    const refreshed = await fetch(`${API}/token/refresh/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh: refreshToken }),
+    });
+    if (refreshed.ok) {
+      const data = await refreshed.json();
+      accessToken = data.access;
+      localStorage.setItem('access_token', accessToken);
+      headers['Authorization'] = `Bearer ${accessToken}`;
+      res = await fetch(`${API}${endpoint}`, { ...options, headers });
+    } else {
+      logout(); return;
+    }
+  }
+
+  return res;
+}
+
+// TOAST // 
+function showToast(msg, duration = 2500) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), duration);
+}
+
+// AUTH — LOGIN / REGISTER / LOGOUT // 
+function switchTab(tab) {
+  document.getElementById('login-form').classList.toggle('hidden', tab !== 'login');
+  document.getElementById('register-form').classList.toggle('hidden', tab !== 'register');
+  document.querySelectorAll('.auth-tab').forEach((el, i) => {
+    el.classList.toggle('active', (i === 0 && tab === 'login') || (i === 1 && tab === 'register'));
+  });
+}
+
+async function handleLogin() {
+  const username = document.getElementById('login-username').value.trim();
+  const password = document.getElementById('login-password').value;
+  const err = document.getElementById('login-error');
+  err.classList.add('hidden');
+
+  if (!username || !password) { showError(err, 'Please fill in all fields.'); return; }
+
+  const res = await apiFetch('/login/', {
+    method: 'POST',
+    body: JSON.stringify({ username, password }),
+  });
+  const data = await res.json();
+  if (!res.ok) { showError(err, data.error || 'Login failed.'); return; }
+  setSession(data);
+}
+
+async function handleRegister() {
+  const username = document.getElementById('reg-username').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const password = document.getElementById('reg-password').value;
+  const err = document.getElementById('register-error');
+  err.classList.add('hidden');
+
+  if (!username || !email || !password) { showError(err, 'Please fill in all fields.'); return; }
+
+  const res = await apiFetch('/register/', {
+    method: 'POST',
+    body: JSON.stringify({ username, email, password }),
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    showError(err, Object.values(data).flat().join(' '));
+    return;
+  }
+  setSession(data);
+}
+
+function setSession(data) {
+  accessToken = data.access;
+  refreshToken = data.refresh;
+  currentUser = data.user;
+  localStorage.setItem('access_token', accessToken);
+  localStorage.setItem('refresh_token', refreshToken);
+  initApp();
+}
+
+function logout() {
+  localStorage.clear();
+  location.reload();
+}
+
+function showError(el, msg) {
+  el.textContent = msg; el.classList.remove('hidden');
+}
+
+//  APP INIT // 
+async function initApp() {
+  // Load current user if we have a token but no currentUser
+  if (!currentUser && accessToken) {
+    const res = await apiFetch('/users/me/');
+    if (res && res.ok) currentUser = await res.json();
+    else { logout(); return; }
+  }
+
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app-screen').style.display = 'block';
+
+  const initial = currentUser.username[0].toUpperCase();
+  document.getElementById('nav-avatar').textContent = initial;
+  document.getElementById('compose-avatar').textContent = initial;
+
+  loadFeed();
+  loadSuggestions();
+}
+
+//  PAGE NAVIGATION //
+function showPage(page) {
+  ['feed','explore','profile','search'].forEach(p =>
+    document.getElementById(`page-${p}`).classList.add('hidden'));
+
+  ['home','explore','profile'].forEach(n =>
+    document.getElementById(`nav-${n}`)?.classList.remove('active'));
+
+  if (page === 'feed') {
+    document.getElementById('page-feed').classList.remove('hidden');
+    document.getElementById('nav-home').classList.add('active');
+    loadFeed();
+  } else if (page === 'explore') {
+    document.getElementById('page-explore').classList.remove('hidden');
+    document.getElementById('nav-explore').classList.add('active');
+    loadExplore();
+  } else if (page === 'profile-me') {
+    showProfile(currentUser.id);
+    document.getElementById('nav-profile').classList.add('active');
+  } else if (page === 'search') {
+    document.getElementById('page-search').classList.remove('hidden');
+  }
+}
+
+// POSTS — FEED (posts from followed users)
+async function loadFeed() {
+  const container = document.getElementById('feed-posts');
+  container.innerHTML = '<div style="text-align:center;padding:40px"><div class="spinner"></div></div>';
+
+  const res = await apiFetch('/users/feed/');
+  if (!res || !res.ok) { container.innerHTML = '<p class="muted">Could not load feed.</p>'; return; }
+  const posts = await res.json();
+
+  if (posts.length === 0) {
+    container.innerHTML = `
+      <div style="text-align:center;padding:60px;color:var(--muted)">
+        <div style="font-size:40px;margin-bottom:12px">📡</div>
+        <p>Your feed is empty. Follow some people to see posts here!</p>
+        <button class="btn btn-primary mt-3" onclick="showPage('explore')">Explore</button>
+      </div>`;
+    return;
+  }
+  container.innerHTML = posts.map(renderPost).join('');
+}
+
+async function loadExplore() {
+  const container = document.getElementById('explore-posts');
+  container.innerHTML = '<div style="text-align:center;padding:40px"><div class="spinner"></div></div>';
+
+  const res = await apiFetch('/posts/');
+  if (!res || !res.ok) return;
+  const posts = await res.json();
+  container.innerHTML = posts.length ? posts.map(renderPost).join('') : '<p class="muted">No posts yet.</p>';
+}
+
+//  RENDER A SINGLE POST
+function renderPost(post) {
+  const initials = post.author.username[0].toUpperCase();
+  const liked = post.is_liked;
+  const time = timeAgo(post.created_at);
+  const comments = post.comments || [];
+
+  return `
+  <div class="post-card" id="post-${post.id}">
+    <div class="post-header">
+      <div class="post-author" onclick="showProfile(${post.author.id})">
+        <div class="post-avatar">${initials}</div>
+        <div>
+          <div class="post-author-name">${esc(post.author.username)}</div>
+          <div class="post-author-handle muted">@${esc(post.author.username)} · ${time}</div>
+        </div>
+      </div>
+      ${post.author.id === currentUser?.id
+        ? `<button class="btn btn-ghost btn-sm" onclick="deletePost(${post.id})" style="color:var(--danger)">✕</button>`
+        : ''}
+    </div>
+    <div class="post-content">${esc(post.content)}</div>
+    ${post.image ? `<img class="post-image" src="${post.image}" alt="Post image" loading="lazy"/>` : ''}
+    <div class="post-actions">
+      <button class="action-btn ${liked ? 'liked' : ''}" id="like-btn-${post.id}"
+        onclick="toggleLike(${post.id})">
+        ${liked ? '❤️' : '🤍'} <span id="likes-count-${post.id}">${post.likes_count}</span>
+      </button>
+      <button class="action-btn" onclick="toggleComments(${post.id})">
+        💬 ${comments.length}
+      </button>
+    </div>
+
+    <!-- Comments section -->
+    <div class="comments-section hidden" id="comments-${post.id}">
+      <div id="comments-list-${post.id}">
+        ${comments.map(renderComment).join('')}
+      </div>
+      <div class="comment-input-row">
+        <textarea class="input" id="comment-input-${post.id}"
+          placeholder="Write a comment…" rows="1"
+          style="min-height:unset;resize:none"></textarea>
+        <button class="btn btn-primary btn-sm" onclick="submitComment(${post.id})">Send</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderComment(c) {
+  return `
+  <div class="comment-item">
+    <div class="comment-avatar">${c.author.username[0].toUpperCase()}</div>
+    <div class="comment-bubble">
+      <div class="comment-author-name">${esc(c.author.username)}</div>
+      <div class="comment-text">${esc(c.content)}</div>
+      <div class="comment-time">${timeAgo(c.created_at)}</div>
+    </div>
+  </div>`;
+}
+
+//  CREATE POST
+async function createPost() {
+  const textarea = document.getElementById('compose-text');
+  const content = textarea.value.trim();
+  if (!content) { showToast('Write something first!'); return; }
+
+  const res = await apiFetch('/posts/', {
+    method: 'POST',
+    body: JSON.stringify({ content }),
+  });
+  if (!res || !res.ok) { showToast('Could not post. Try again.'); return; }
+
+  textarea.value = '';
+  updateCounter();
+  showToast('Posted! ✨');
+  loadFeed();
+}
+
+async function deletePost(postId) {
+  if (!confirm('Delete this post?')) return;
+  await apiFetch(`/posts/${postId}/`, { method: 'DELETE' });
+  document.getElementById(`post-${postId}`)?.remove();
+  showToast('Post deleted.');
+}
+
+//  LIKE
+async function toggleLike(postId) {
+  const res = await apiFetch(`/posts/${postId}/like/`, { method: 'POST' });
+  if (!res || !res.ok) return;
+  const data = await res.json();
+
+  const btn = document.getElementById(`like-btn-${postId}`);
+  const count = document.getElementById(`likes-count-${postId}`);
+
+  if (data.status === 'liked') {
+    btn.classList.add('liked');
+    btn.innerHTML = `❤️ <span id="likes-count-${postId}">${data.likes_count}</span>`;
+  } else {
+    btn.classList.remove('liked');
+    btn.innerHTML = `🤍 <span id="likes-count-${postId}">${data.likes_count}</span>`;
+  }
+}
+
+//  COMMENTS
+function toggleComments(postId) {
+  const section = document.getElementById(`comments-${postId}`);
+  section.classList.toggle('hidden');
+}
+
+async function submitComment(postId) {
+  const input = document.getElementById(`comment-input-${postId}`);
+  const content = input.value.trim();
+  if (!content) return;
+
+  const res = await apiFetch(`/posts/${postId}/comment/`, {
+    method: 'POST',
+    body: JSON.stringify({ content }),
+  });
+  if (!res || !res.ok) return;
+  const comment = await res.json();
+
+  const list = document.getElementById(`comments-list-${postId}`);
+  list.insertAdjacentHTML('beforeend', renderComment(comment));
+  input.value = '';
+}
+
+//  PROFILES
+async function showProfile(userId) {
+  currentProfileId = userId;
+
+  // Show profile page
+  ['feed','explore','search'].forEach(p =>
+    document.getElementById(`page-${p}`).classList.add('hidden'));
+  document.getElementById('page-profile').classList.remove('hidden');
+
+  // Fetch user data + their posts in parallel
+  const [userRes, postsRes] = await Promise.all([
+    apiFetch(`/users/${userId}/`),
+    apiFetch(`/users/${userId}/posts/`),
+  ]);
+  if (!userRes.ok) return;
+  const user = await userRes.json();
+  const posts = postsRes.ok ? await postsRes.json() : [];
+
+  // Populate profile header
+  document.getElementById('prof-avatar').textContent = user.username[0].toUpperCase();
+  document.getElementById('prof-name').textContent = user.username;
+  document.getElementById('prof-handle').textContent = `@${user.username}`;
+  document.getElementById('prof-bio').textContent = user.bio || '';
+  document.getElementById('prof-posts-count').textContent = posts.length;
+  document.getElementById('prof-followers').textContent = user.followers_count;
+  document.getElementById('prof-following').textContent = user.following_count;
+
+  // Follow/Edit button
+  const actions = document.getElementById('prof-actions');
+  if (user.id === currentUser?.id) {
+    actions.innerHTML = `<button class="btn btn-ghost btn-sm" disabled>Your profile</button>`;
+  } else {
+    const isFollowing = user.is_following;
+    actions.innerHTML = `
+      <button class="btn ${isFollowing ? 'btn-ghost' : 'btn-primary'} btn-sm"
+        id="follow-btn-${user.id}" onclick="toggleFollow(${user.id})">
+        ${isFollowing ? 'Unfollow' : 'Follow'}
+      </button>`;
+  }
+
+  // Render posts
+  const postsContainer = document.getElementById('profile-posts');
+  postsContainer.innerHTML = posts.length
+    ? posts.map(renderPost).join('')
+    : `<div style="text-align:center;padding:40px;color:var(--muted)">No posts yet.</div>`;
+}
+
+async function toggleFollow(userId) {
+  const res = await apiFetch(`/users/${userId}/follow/`, { method: 'POST' });
+  if (!res || !res.ok) return;
+  const data = await res.json();
+
+  const btn = document.getElementById(`follow-btn-${userId}`);
+  const followed = data.status === 'followed';
+  if (btn) {
+    btn.textContent = followed ? 'Unfollow' : 'Follow';
+    btn.className = `btn ${followed ? 'btn-ghost' : 'btn-primary'} btn-sm`;
+  }
+
+  showToast(followed ? `Following!` : `Unfollowed.`);
+
+  // Refresh follower count if on their profile
+  if (currentProfileId === userId) {
+    const countEl = document.getElementById('prof-followers');
+    const current = parseInt(countEl.textContent);
+    countEl.textContent = followed ? current + 1 : current - 1;
+  }
+
+  loadSuggestions();
+}
+
+//  SEARCH
+function searchUsers(query) {
+  clearTimeout(searchTimeout);
+  if (!query.trim()) return;
+  searchTimeout = setTimeout(async () => {
+    showPage('search');
+    const res = await apiFetch(`/users/?search=${encodeURIComponent(query)}`);
+    if (!res || !res.ok) return;
+    const users = await res.json();
+    // DRF returns paginated or plain array; handle both
+    const list = Array.isArray(users) ? users : (users.results || []);
+    const container = document.getElementById('search-results');
+    container.innerHTML = list.length
+      ? list.map(renderUserCard).join('')
+      : '<p class="muted">No users found.</p>';
+  }, 350);
+}
+
+//  SUGGESTIONS (right panel)
+async function loadSuggestions() {
+  const res = await apiFetch('/users/');
+  if (!res || !res.ok) return;
+  const data = await res.json();
+  const users = Array.isArray(data) ? data : (data.results || []);
+  const others = users.filter(u => u.id !== currentUser?.id).slice(0, 6);
+  document.getElementById('suggestions-list').innerHTML =
+    others.length ? others.map(renderUserCard).join('') : '<p class="muted">No suggestions.</p>';
+}
+
+function renderUserCard(user) {
+  const isFollowing = user.is_following;
+  return `
+  <div class="user-card">
+    <div class="user-card-left" onclick="showProfile(${user.id})">
+      <div class="user-card-avatar">${user.username[0].toUpperCase()}</div>
+      <div>
+        <div class="user-card-name">${esc(user.username)}</div>
+        <div class="user-card-handle">@${esc(user.username)}</div>
+      </div>
+    </div>
+    <button class="btn ${isFollowing ? 'btn-ghost' : 'btn-primary'} btn-sm"
+      id="follow-btn-${user.id}" onclick="toggleFollow(${user.id})">
+      ${isFollowing ? 'Following' : 'Follow'}
+    </button>
+  </div>`;
+}
+
+//  COMPOSE COUNTER
+function updateCounter() {
+  const len = document.getElementById('compose-text').value.length;
+  const el = document.getElementById('compose-counter');
+  el.textContent = `${len} / 500`;
+  el.classList.toggle('warn', len > 450);
+}
+
+//  UTILITIES
+function esc(str) {
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+// Human
+function timeAgo(iso) {
+  const secs = Math.floor((Date.now() - new Date(iso)) / 1000);
+  if (secs < 60) return 'just now';
+  if (secs < 3600) return `${Math.floor(secs/60)}m ago`;
+  if (secs < 86400) return `${Math.floor(secs/3600)}h ago`;
+  return `${Math.floor(secs/86400)}d ago`;
+}
+
+//  BOOT 
+if (accessToken) {
+  initApp();
+} else {
+  document.getElementById('auth-screen').style.display = 'flex';
+}
+</script>
+</body>
+</html>
