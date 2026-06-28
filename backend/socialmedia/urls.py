@@ -45,6 +45,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenRefreshView
+from django.views.generic import TemplateView
 
 from core.views import (
     RegisterView, LoginView,
@@ -66,6 +67,7 @@ urlpatterns = [
 
     # All /api/users/ and /api/posts/ routes from the router
     path('api/', include(router.urls)),
+    path('', TemplateView.as_view(template_name='index.html')),
 ]
 
 # Serve media files (avatars, post images) during development
