@@ -34,3 +34,9 @@ cd backend && python manage.py migrate
 # Start server
 python manage.py runserver
 
+## Screenshots
+### Login Page
+![Login](pulse-app home page ss.png)
+
+###Home Page
+![Home](pulse-app homepage ss.png)
