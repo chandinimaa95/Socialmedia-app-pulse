@@ -23,8 +23,7 @@ https://socialmedia-app-pulse.onrender.com
 ## Screenshots
 ### Login Page
 
-![Login](<img width="1335" height="615" alt="Image" src="https://github.com/user-attachments/assets/cfe22088-3402-46e8-9d91-28adf4268e0a" />
-)
+![Login](pulse-app home page ss.png)
 
 ### Home Page
 
