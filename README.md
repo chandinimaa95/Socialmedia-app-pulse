@@ -20,14 +20,7 @@ https://socialmedia-app-pulse.onrender.com
 - ✅ Personal Feed
 - ✅ User Profiles
 
-## Screenshots
-### Login Page
 
-![Login](pulse-app home page ss.png)
-
-### Home Page
-
-![Home](pulse-app-homepage-ss.png)
 
 ## Setup Instructions
 ```bash
